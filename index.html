@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#681A89" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Zepto — Order Reassignment Feedback</title>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EMXFPPHQ7K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-EMXFPPHQ7K', { page_location: window.location.origin + window.location.pathname });
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; min-height: 100vh; overscroll-behavior: none; }
+
+    :root {
+      --zepto-purple:        #681A89;
+      --zepto-purple-dark:   #4A1264;
+      --zepto-lavender:      #CA8BD5;
+      --zepto-purple-glow:   rgba(104,26,137,0.25);
+      --zepto-purple-soft:   rgba(104,26,137,0.08);
+      --zepto-lavender-soft: rgba(202,139,213,0.15);
+      --danger:              #ef4444;
+      --success:             #22C55E;
+      --text:                #1A1A2E;
+      --text-secondary:      #5C5C6E;
+      --text-muted:          #9999A8;
+      --border:              #EAEAF0;
+      --bg-base:             #FFFFFF;
+      --bg-soft:             #F8F7FB;
+      --bg-input:            #F8F7FB;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top:    env(safe-area-inset-top,    0px);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Devanagari', 'Inter', sans-serif;
+      color: var(--text);
+      background: var(--bg-base);
+      -webkit-font-smoothing: antialiased;
+      font-size: 16px;
+    }
+
+    /* ── App shell ── */
+    .app {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (min-width: 600px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: linear-gradient(135deg, #2A0E3A 0%, #4A1264 100%);
+      }
+      .app {
+        max-width: 540px;
+        width: 100%;
+        min-height: auto;
+        height: 92vh;
+        max-height: 860px;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(74,18,100,0.4);
+        overflow: hidden;
+      }
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      padding: calc(12px + var(--safe-top)) 20px 10px;
+      background: var(--bg-base);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--zepto-purple) 0%, var(--zepto-lavender) 100%);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 900; font-size: 19px;
+      box-shadow: 0 4px 14px var(--zepto-purple-glow);
+    }
+    .brand-name { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.4px; }
+    .rider-tag {
+      font-size: 11px;
+      background: var(--zepto-purple-soft);
+      color: var(--zepto-purple);
+      padding: 5px 11px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Language switcher ── */
+    .lang-switcher {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .lang-btn {
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-soft);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      letter-spacing: 0.2px;
+      -webkit-appearance: none;
+    }
+    .lang-btn:active { transform: scale(0.95); }
+    .lang-btn.active {
+      background: var(--zepto-purple);
+      border-color: var(--zepto-purple);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--zepto-purple-glow);
+    }
+
+    /* ── Scrollable content ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 22px 20px 12px;
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--zepto-purple-soft), var(--zepto-lavender-soft));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px 20px;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .hero-icon { font-size: 44px; display: block; margin-bottom: 10px; line-height: 1; }
+    .hero-title { font-size: 21px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.25; }
+    .hero-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.55; max-width: 320px; margin: 0 auto; }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 7px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .field-label .req { color: var(--zepto-purple); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="datetime-local"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg-input);
+      font-family: inherit;
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    input[type="text"]::placeholder { color: var(--text-muted); }
+    input[type="text"]:focus,
+    input[type="datetime-local"]:focus {
+      border-color: var(--zepto-purple);
+      box-shadow: 0 0 0 4px var(--zepto-purple-soft);
+      background: var(--bg-base);
+    }
+
+    /* ── Reason cards ── */
+    .reasons-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 9px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .reasons-label .req { color: var(--zepto-purple); margin-left: 2px; }
+
+    .reasons-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .reason-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      background: var(--bg-input);
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .reason-card:active { transform: scale(0.985); }
+    .reason-card.selected {
+      border-color: var(--zepto-purple);
+      background: var(--zepto-purple-soft);
+      box-shadow: 0 0 0 3px var(--zepto-purple-soft);
+    }
+    .reason-card input[type="radio"] { display: none; }
+
+    .radio-ring {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .reason-card.selected .radio-ring { border-color: var(--zepto-purple); }
+    .radio-ring::after {
+      content: '';
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--zepto-purple);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .reason-card.selected .radio-ring::after { opacity: 1; }
+
+    .reason-emoji { font-size: 21px; flex-shrink: 0; margin-top: 1px; }
+    .reason-body { flex: 1; min-width: 0; }
+    .reason-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+    .reason-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── Custom reason textarea ── */
+    .custom-wrap {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+      margin-top: 0;
+    }
+    .custom-wrap.open { max-height: 160px; opacity: 1; margin-top: 9px; }
+
+    textarea.custom-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      min-height: 88px;
+      background: var(--bg-input);
+      color: var(--text);
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      line-height: 1.5;
+    }
+    textarea.custom-input::placeholder { color: var(--text-muted); }
+    textarea.custom-input:focus {
+      border-color: var(--zepto-purple);
+      box-shadow: 0 0 0 4px var(--zepto-purple-soft);
+      background: var(--bg-base);
+    }
+
+    /* ── Inline errors ── */
+    .inline-error {
+      font-size: 12px;
+      color: var(--danger);
+      font-weight: 600;
+      margin-top: 7px;
+      display: none;
+      padding: 7px 11px;
+      background: rgba(239,68,68,0.07);
+      border-radius: 8px;
+    }
+    .inline-error.show { display: block; }
+
+    /* ── Nav bar ── */
+    .nav-bar {
+      padding: 12px 20px calc(12px + var(--safe-bottom));
+      border-top: 1px solid var(--border);
+      background: var(--bg-base);
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--zepto-purple), var(--zepto-purple-dark));
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      font-family: inherit;
+      cursor: pointer;
+      min-height: 52px;
+      -webkit-appearance: none;
+      box-shadow: 0 4px 16px var(--zepto-purple-glow);
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-submit:active { transform: scale(0.97); }
+    .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    /* ── State screens ── */
+    .state-screen {
+      text-align: center;
+      padding: 48px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .state-icon  { font-size: 72px; margin-bottom: 18px; line-height: 1; }
+    .state-title { font-size: 23px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.4px; }
+    .state-msg   { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 300px; }
+    .success-title { color: var(--success); }
+    .error-title   { color: var(--danger); }
+
+    .error-detail {
+      margin-top: 16px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #b91c1c;
+      text-align: left;
+      word-break: break-word;
+      max-width: 340px;
+    }
+
+    .btn-action {
+      margin-top: 22px;
+      padding: 13px 32px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+      transition: all 0.15s;
+    }
+    .btn-retry {
+      background: linear-gradient(135deg, var(--zepto-purple), var(--zepto-purple-dark));
+      color: white;
+      border: none;
+      box-shadow: 0 4px 14px var(--zepto-purple-glow);
+    }
+    .btn-another {
+      background: transparent;
+      color: var(--zepto-purple);
+      border: 1.5px solid var(--zepto-purple);
+    }
+    .btn-another:hover { background: var(--zepto-purple-soft); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 46px; height: 46px;
+      border: 4px solid var(--border);
+      border-top-color: var(--zepto-purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 18px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .no-rider-screen {
+      padding: 48px 24px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
+var API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxcGpWQ-2B_qBLSO7G3Gn6CnbgOAklGssHuXRKny5SbjiaxNcOOtBuwZ4izg-EVZA9I/exec';
+
+/* =====================================================================
+   TRANSLATIONS
+   ===================================================================== */
+var T = {
+  en: {
+    langLabel:       'EN',
+    pageTitle:       'Order Reassignment Feedback',
+    heroIcon:        '🔄',
+    heroTitle:       'Order Reassignment\nFeedback',
+    heroSub:         'Help us understand why this order was reassigned. Your input improves the delivery experience for everyone.',
+    labelRider:      'Rider ID / Name',
+    labelOrder:      'Order ID',
+    labelOrderOpt:   '(optional)',
+    labelTime:       'Date & Time of Reassignment',
+    labelReason:     'Reason for Reassignment',
+    placeholderRider:'e.g. RID-4821 or Ravi Kumar',
+    placeholderOrder:'e.g. ORD-20240501-9182',
+    placeholderOther:'Describe what happened in your own words…',
+    errRider:        'Please enter your Rider ID or name.',
+    errTime:         'Please select the date and time.',
+    errReason:       'Please select a reason for the reassignment.',
+    errCustom:       'Please describe the reason before submitting.',
+    btnSubmit:       'Submit Feedback',
+    btnSubmitting:   'Submitting…',
+    btnAnother:      'Submit Another',
+    btnRetry:        'Try Again',
+    successTitle:    'Feedback Submitted!',
+    successMsg:      'Thank you for letting us know. Your response has been recorded and will help us improve the experience.',
+    errorTitle:      'Something went wrong',
+    errorMsg:        "We couldn't submit your feedback right now.",
+    submittingTitle: 'Submitting…',
+    submittingMsg:   'Saving your feedback, please wait.',
+    noRiderTitle:    'Rider ID Missing',
+    noRiderMsg:      'Please open this link from the Zepto Rider app or the message shared with you.',
+    reasons: [
+      { value:'order_cancelled',  emoji:'🚫', title:'Order got Canceled',                                desc:'The order was cancelled before you could deliver it.' },
+      { value:'captain_later',    emoji:'⏳', title:'Store Captain asking to come back later',            desc:'The store captain told you to return at a later time.' },
+      { value:'riders_blocking',  emoji:'🚷', title:'Other riders are not allowing me to deliver',       desc:'Other riders at the store prevented you from picking up the order.' },
+      { value:'new_rider_unclear',emoji:'🤔', title:'Not able to understand how to get started',         desc:'Unclear about the delivery process as a new rider.' },
+      { value:'other',            emoji:'✏️', title:'Other reason',                                      desc:'Something else happened — please describe below.' }
+    ]
+  },
+  hi: {
+    langLabel:       'हिंदी',
+    pageTitle:       'ऑर्डर रीअसाइनमेंट फीडबैक',
+    heroIcon:        '🔄',
+    heroTitle:       'ऑर्डर रीअसाइनमेंट\nफीडबैक',
+    heroSub:         'हमें बताएं कि यह ऑर्डर रीअसाइन क्यों किया गया। आपकी जानकारी डिलीवरी अनुभव को बेहतर बनाने में मदद करती है।',
+    labelRider:      'राइडर आईडी / नाम',
+    labelOrder:      'ऑर्डर आईडी',
+    labelOrderOpt:   '(वैकल्पिक)',
+    labelTime:       'रीअसाइनमेंट की तारीख और समय',
+    labelReason:     'रीअसाइनमेंट का कारण',
+    placeholderRider:'जैसे RID-4821 या रवि कुमार',
+    placeholderOrder:'जैसे ORD-20240501-9182',
+    placeholderOther:'अपने शब्दों में बताएं कि क्या हुआ…',
+    errRider:        'कृपया अपनी राइडर आईडी या नाम दर्ज करें।',
+    errTime:         'कृपया तारीख और समय चुनें।',
+    errReason:       'कृपया रीअसाइनमेंट का कारण चुनें।',
+    errCustom:       'सबमिट करने से पहले कारण बताएं।',
+    btnSubmit:       'फीडबैक सबमिट करें',
+    btnSubmitting:   'सबमिट हो रहा है…',
+    btnAnother:      'और सबमिट करें',
+    btnRetry:        'पुनः प्रयास करें',
+    successTitle:    'फीडबैक सबमिट हो गया!',
+    successMsg:      'हमें बताने के लिए धन्यवाद। आपका जवाब दर्ज कर लिया गया है और अनुभव बेहतर बनाने में मदद करेगा।',
+    errorTitle:      'कुछ गलत हो गया',
+    errorMsg:        'अभी आपका फीडबैक सबमिट नहीं हो सका।',
+    submittingTitle: 'सबमिट हो रहा है…',
+    submittingMsg:   'आपका फीडबैक सेव हो रहा है, कृपया प्रतीक्षा करें।',
+    noRiderTitle:    'राइडर आईडी नहीं मिली',
+    noRiderMsg:      'कृपया यह लिंक Zepto राइडर ऐप या भेजे गए संदेश से खोलें।',
+    reasons: [
+      { value:'order_cancelled',  emoji:'🚫', title:'ऑर्डर कैंसिल हो गया',                     desc:'डिलीवरी से पहले ही ऑर्डर कैंसिल कर दिया गया।' },
+      { value:'captain_later',    emoji:'⏳', title:'स्टोर कैप्टन ने बाद में आने को कहा',       desc:'स्टोर कैप्टन ने बाद में वापस आने को कहा।' },
+      { value:'riders_blocking',  emoji:'🚷', title:'अन्य राइडर मुझे डिलीवरी नहीं करने दे रहे', desc:'स्टोर पर अन्य राइडर ने ऑर्डर लेने से रोका।' },
+      { value:'new_rider_unclear',emoji:'🤔', title:'डिलीवरी कैसे शुरू करें समझ नहीं आया',      desc:'नए राइडर होने के कारण डिलीवरी प्रक्रिया स्पष्ट नहीं थी।' },
+      { value:'other',            emoji:'✏️', title:'अन्य कारण',                                 desc:'कुछ और हुआ — नीचे बताएं।' }
+    ]
+  },
+  mr: {
+    langLabel:       'मराठी',
+    pageTitle:       'ऑर्डर पुनर्नियुक्ती अभिप्राय',
+    heroIcon:        '🔄',
+    heroTitle:       'ऑर्डर पुनर्नियुक्ती\nअभिप्राय',
+    heroSub:         'हा ऑर्डर पुनर्नियुक्त का झाला हे सांगा. तुमचा अभिप्राय डिलिव्हरी अनुभव सुधारण्यास मदत करतो.',
+    labelRider:      'रायडर आयडी / नाव',
+    labelOrder:      'ऑर्डर आयडी',
+    labelOrderOpt:   '(ऐच्छिक)',
+    labelTime:       'पुनर्नियुक्तीची तारीख व वेळ',
+    labelReason:     'पुनर्नियुक्तीचे कारण',
+    placeholderRider:'उदा. RID-4821 किंवा रवी कुमार',
+    placeholderOrder:'उदा. ORD-20240501-9182',
+    placeholderOther:'तुमच्या शब्दांत काय झाले ते सांगा…',
+    errRider:        'कृपया तुमचा रायडर आयडी किंवा नाव टाका.',
+    errTime:         'कृपया तारीख आणि वेळ निवडा.',
+    errReason:       'कृपया पुनर्नियुक्तीचे कारण निवडा.',
+    errCustom:       'सबमिट करण्यापूर्वी कारण सांगा.',
+    btnSubmit:       'अभिप्राय सबमिट करा',
+    btnSubmitting:   'सबमिट होत आहे…',
+    btnAnother:      'आणखी सबमिट करा',
+    btnRetry:        'पुन्हा प्रयत्न करा',
+    successTitle:    'अभिप्राय सबमिट झाला!',
+    successMsg:      'सांगितल्याबद्दल धन्यवाद. तुमचे उत्तर नोंदवले गेले आहे आणि अनुभव सुधारण्यास मदत करेल.',
+    errorTitle:      'काहीतरी चुकले',
+    errorMsg:        'आत्ता तुमचा अभिप्राय सबमिट होऊ शकला नाही.',
+    submittingTitle: 'सबमिट होत आहे…',
+    submittingMsg:   'तुमचा अभिप्राय सेव्ह होत आहे, कृपया थांबा.',
+    noRiderTitle:    'रायडर आयडी आढळला नाही',
+    noRiderMsg:      'कृपया हे लिंक Zepto रायडर ॲप किंवा पाठवलेल्या संदेशातून उघडा.',
+    reasons: [
+      { value:'order_cancelled',  emoji:'🚫', title:'ऑर्डर रद्द झाला',                          desc:'डिलिव्हरी होण्यापूर्वीच ऑर्डर रद्द करण्यात आला.' },
+      { value:'captain_later',    emoji:'⏳', title:'स्टोअर कॅप्टनने नंतर यायला सांगितले',      desc:'स्टोअर कॅप्टनने नंतर परत येण्यास सांगितले.' },
+      { value:'riders_blocking',  emoji:'🚷', title:'इतर रायडर मला डिलिव्हरी करू देत नाहीत',   desc:'स्टोअरवरील इतर रायडरनी ऑर्डर घेण्यापासून अडवले.' },
+      { value:'new_rider_unclear',emoji:'🤔', title:'डिलिव्हरी कशी सुरू करायची हे समजले नाही',  desc:'नवीन रायडर असल्याने डिलिव्हरी प्रक्रिया स्पष्ट नव्हती.' },
+      { value:'other',            emoji:'✏️', title:'इतर कारण',                                  desc:'इतर काही झाले — खाली सांगा.' }
+    ]
+  }
+};
+
+/* =====================================================================
+   URL PARAMS
+   ===================================================================== */
+function getQueryParams() {
+  var params = {};
+  var raw = window.location.search.substring(1).replace(/\?/g, '&');
+  if (!raw) return params;
+  raw.split('&').forEach(function(pair) {
+    if (!pair) return;
+    var eq = pair.indexOf('=');
+    if (eq < 0) return;
+    params[decodeURIComponent(pair.substring(0, eq))] = decodeURIComponent(pair.substring(eq + 1));
+  });
+  return params;
+}
+
+var QUERY    = getQueryParams();
+var RIDER_ID = QUERY.riderId || '';
+var ORDER_ID = QUERY.orderId || '';
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+var currentLang   = 'en';
+var selectedReason = '';
+
+/* =====================================================================
+   ANALYTICS
+   ===================================================================== */
+function track(name, params) {
+  try { if (typeof gtag === 'function') gtag('event', name, params || {}); } catch(e){}
+}
+track('reassignment_form_view', { has_rider_id: !!RIDER_ID });
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function $(id) { return document.getElementById(id); }
+
+/* =====================================================================
+   INITIAL RENDER
+   ===================================================================== */
+var app = document.getElementById('app');
+
+if (!RIDER_ID) {
+  renderNoRider();
+} else {
+  renderShell();
+  showScreen('screenForm');
+}
+
+/* ─── No-Rider guard ─── */
+function renderNoRider() {
+  var t = T[currentLang];
+  app.innerHTML =
+    '<div class="top-bar">' +
+      '<div class="top-row">' +
+        '<div class="brand"><div class="brand-mark">Z</div><div class="brand-name">Zepto</div></div>' +
+        renderLangSwitcher() +
+      '</div>' +
+    '</div>' +
+    '<div class="no-rider-screen">' +
+      '<span class="state-icon">⚠️</span>' +
+      '<div class="state-title" id="noRiderTitle">' + t.noRiderTitle + '</div>' +
+      '<p class="state-msg" id="noRiderMsg">' + t.noRiderMsg + '</p>' +
+    '</div>';
+  bindLangButtons();
+}
+
+/* ─── Main app shell (rendered once) ─── */
+function renderShell() {
+  var t   = T[currentLang];
+  var now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  var defaultDT = now.toISOString().slice(0, 16);
+
+  app.innerHTML =
+    /* Top bar */
+    '<div class="top-bar">' +
+      '<div class="top-row">' +
+        '<div class="brand"><div class="brand-mark">Z</div><div class="brand-name">Zepto</div></div>' +
+        '<div class="rider-tag">ID: ' + escapeHtml(RIDER_ID) + '</div>' +
+      '</div>' +
+      '<div class="lang-switcher" id="langSwitcher">' + renderLangSwitcher() + '</div>' +
+    '</div>' +
+
+    /* Content */
+    '<div class="content" id="content">' +
+
+      /* ── Form screen ── */
+      '<div class="screen active" id="screenForm">' +
+        '<div class="hero">' +
+          '<span class="hero-icon" id="heroIcon">' + t.heroIcon + '</span>' +
+          '<h1 class="hero-title" id="heroTitle">' + t.heroTitle.replace('\n','<br>') + '</h1>' +
+          '<p class="hero-sub" id="heroSub">' + t.heroSub + '</p>' +
+        '</div>' +
+
+        /* Rider ID */
+        '<div class="field">' +
+          '<label class="field-label" for="riderId"><span id="lblRider">' + t.labelRider + '</span> <span class="req">*</span></label>' +
+          '<input type="text" id="riderId" value="' + escapeHtml(RIDER_ID) + '" />' +
+          '<div class="inline-error" id="errRider">' + t.errRider + '</div>' +
+        '</div>' +
+
+        /* Order ID */
+        '<div class="field">' +
+          '<label class="field-label" for="orderId">' +
+            '<span id="lblOrder">' + t.labelOrder + '</span> ' +
+            '<span style="font-weight:400;text-transform:none;font-size:11px;color:var(--text-muted);" id="lblOrderOpt">' + t.labelOrderOpt + '</span>' +
+          '</label>' +
+          '<input type="text" id="orderId" value="' + escapeHtml(ORDER_ID) + '" />' +
+        '</div>' +
+
+        /* Date & Time */
+        '<div class="field">' +
+          '<label class="field-label" for="eventTime"><span id="lblTime">' + t.labelTime + '</span> <span class="req">*</span></label>' +
+          '<input type="datetime-local" id="eventTime" value="' + defaultDT + '" />' +
+          '<div class="inline-error" id="errTime">' + t.errTime + '</div>' +
+        '</div>' +
+
+        /* Reason */
+        '<div class="field">' +
+          '<div class="reasons-label"><span id="lblReason">' + t.labelReason + '</span> <span class="req">*</span></div>' +
+          '<div class="reasons-list" id="reasonsList">' + buildReasonCards(t) + '</div>' +
+          '<div class="custom-wrap" id="customWrap">' +
+            '<textarea class="custom-input" id="customReason" rows="3"></textarea>' +
+          '</div>' +
+          '<div class="inline-error" id="errReason">' + t.errReason + '</div>' +
+          '<div class="inline-error" id="errCustom">' + t.errCustom + '</div>' +
+        '</div>' +
+      '</div>' + /* /screenForm */
+
+      /* ── Submitting ── */
+      '<div class="screen" id="screenSubmitting">' +
+        '<div class="state-screen">' +
+          '<div class="spinner"></div>' +
+          '<div class="state-title" id="submittingTitle">' + t.submittingTitle + '</div>' +
+          '<p class="state-msg" id="submittingMsg">' + t.submittingMsg + '</p>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── Success ── */
+      '<div class="screen" id="screenSuccess">' +
+        '<div class="state-screen">' +
+          '<span class="state-icon">✅</span>' +
+          '<div class="state-title success-title" id="successTitle">' + t.successTitle + '</div>' +
+          '<p class="state-msg" id="successMsg">' + t.successMsg + '</p>' +
+          '<button class="btn-action btn-another" id="btnAnother" onclick="resetForm()">' + t.btnAnother + '</button>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── Error ── */
+      '<div class="screen" id="screenError">' +
+        '<div class="state-screen">' +
+          '<span class="state-icon">😞</span>' +
+          '<div class="state-title error-title" id="errorTitle">' + t.errorTitle + '</div>' +
+          '<p class="state-msg" id="errorMsg">' + t.errorMsg + '</p>' +
+          '<div class="error-detail" id="errorDetail"></div>' +
+          '<button class="btn-action btn-retry" id="btnRetry" onclick="showScreen(\'screenForm\')">' + t.btnRetry + '</button>' +
+        '</div>' +
+      '</div>' +
+
+    '</div>' + /* /content */
+
+    /* Nav bar */
+    '<div class="nav-bar" id="navBar">' +
+      '<button class="btn-submit" id="btnSubmit" onclick="handleSubmit()">' + t.btnSubmit + '</button>' +
+    '</div>';
+
+  bindLangButtons();
+  updatePlaceholders(t);
+}
+
+/* ─── Build reason card HTML ─── */
+function buildReasonCards(t) {
+  return t.reasons.map(function(r) {
+    return (
+      '<label class="reason-card' + (selectedReason === r.value ? ' selected' : '') + '" ' +
+             'data-value="' + r.value + '" onclick="selectReason(this)">' +
+        '<input type="radio" name="reason" value="' + r.value + '"' + (selectedReason === r.value ? ' checked' : '') + ' />' +
+        '<div class="radio-ring"></div>' +
+        '<span class="reason-emoji">' + r.emoji + '</span>' +
+        '<div class="reason-body">' +
+          '<div class="reason-title">' + r.title + '</div>' +
+          '<div class="reason-desc">'  + r.desc  + '</div>' +
+        '</div>' +
+      '</label>'
+    );
+  }).join('');
+}
+
+/* ─── Language switcher HTML (no bindings yet) ─── */
+function renderLangSwitcher() {
+  return ['en','hi','mr'].map(function(lang) {
+    return '<button class="lang-btn' + (currentLang === lang ? ' active' : '') + '" ' +
+           'data-lang="' + lang + '" onclick="switchLang(\'' + lang + '\')">' +
+           T[lang].langLabel + '</button>';
+  }).join('');
+}
+
+/* ─── Bind lang buttons (called after any innerHTML set) ─── */
+function bindLangButtons() {
+  /* bindings are inline onclick, nothing extra needed */
+}
+
+/* =====================================================================
+   LANGUAGE SWITCH
+   ===================================================================== */
+function switchLang(lang) {
+  if (lang === currentLang) return;
+  currentLang = lang;
+  document.documentElement.lang = lang === 'en' ? 'en' : lang === 'hi' ? 'hi' : 'mr';
+  track('language_switch', { language: lang });
+
+  var t = T[lang];
+
+  /* Update lang buttons */
+  document.querySelectorAll('.lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+  });
+
+  /* ── Text nodes that are always present ── */
+  setText('heroTitle',       t.heroTitle.replace('\n','<br>'), true);
+  setText('heroSub',         t.heroSub);
+  setText('lblRider',        t.labelRider);
+  setText('lblOrder',        t.labelOrder);
+  setText('lblOrderOpt',     t.labelOrderOpt);
+  setText('lblTime',         t.labelTime);
+  setText('lblReason',       t.labelReason);
+  setText('errRider',        t.errRider);
+  setText('errTime',         t.errTime);
+  setText('errReason',       t.errReason);
+  setText('errCustom',       t.errCustom);
+  setText('submittingTitle', t.submittingTitle);
+  setText('submittingMsg',   t.submittingMsg);
+  setText('successTitle',    t.successTitle);
+  setText('successMsg',      t.successMsg);
+  setText('errorTitle',      t.errorTitle);
+  setText('errorMsg',        t.errorMsg);
+
+  /* Buttons */
+  if ($('btnSubmit'))  $('btnSubmit').textContent  = t.btnSubmit;
+  if ($('btnAnother')) $('btnAnother').textContent = t.btnAnother;
+  if ($('btnRetry'))   $('btnRetry').textContent   = t.btnRetry;
+
+  /* Placeholders */
+  updatePlaceholders(t);
+
+  /* Re-render reason cards (preserves selection) */
+  var list = $('reasonsList');
+  if (list) list.innerHTML = buildReasonCards(t);
+
+  /* Custom textarea placeholder */
+  var ct = $('customReason');
+  if (ct) ct.placeholder = t.placeholderOther;
+
+  /* No-rider screen (if rendered) */
+  setText('noRiderTitle', t.noRiderTitle);
+  setText('noRiderMsg',   t.noRiderMsg);
+}
+
+function setText(id, text, asHtml) {
+  var el = $(id);
+  if (!el) return;
+  if (asHtml) el.innerHTML = text;
+  else el.textContent = text;
+}
+
+function updatePlaceholders(t) {
+  var ri = $('riderId');  if (ri) ri.placeholder = t.placeholderRider;
+  var oi = $('orderId');  if (oi) oi.placeholder = t.placeholderOrder;
+  var ct = $('customReason'); if (ct) ct.placeholder = t.placeholderOther;
+}
+
+/* =====================================================================
+   REASON SELECTION
+   ===================================================================== */
+function selectReason(card) {
+  document.querySelectorAll('.reason-card').forEach(function(c) { c.classList.remove('selected'); });
+  card.classList.add('selected');
+  card.querySelector('input[type="radio"]').checked = true;
+  selectedReason = card.getAttribute('data-value');
+
+  var wrap = $('customWrap');
+  if (selectedReason === 'other') {
+    wrap.classList.add('open');
+    var ct = $('customReason');
+    if (ct) { ct.placeholder = T[currentLang].placeholderOther; ct.focus(); }
+  } else {
+    wrap.classList.remove('open');
+    var ct2 = $('customReason'); if (ct2) ct2.value = '';
+  }
+  clearError('errReason');
+  clearError('errCustom');
+}
+
+/* =====================================================================
+   SCREEN MANAGEMENT
+   ===================================================================== */
+function showScreen(id) {
+  ['screenForm','screenSubmitting','screenSuccess','screenError'].forEach(function(s) {
+    var el = $(s); if (el) el.classList.remove('active');
+  });
+  var t = $(id); if (t) t.classList.add('active');
+  var c = $('content'); if (c) c.scrollTop = 0;
+  var nav = $('navBar');
+  if (nav) nav.style.display = (id === 'screenForm') ? 'block' : 'none';
+}
+
+/* =====================================================================
+   VALIDATION & SUBMIT
+   ===================================================================== */
+function showError(id) {
+  var el = $(id);
+  if (el) { el.classList.add('show'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+}
+function clearError(id) { var el = $(id); if (el) el.classList.remove('show'); }
+
+function handleSubmit() {
+  ['errRider','errTime','errReason','errCustom'].forEach(clearError);
+
+  var riderId    = ($('riderId')     || {}).value  ? $('riderId').value.trim()     : '';
+  var orderId    = ($('orderId')     || {}).value  ? $('orderId').value.trim()     : '';
+  var eventTime  = ($('eventTime')   || {}).value  ? $('eventTime').value           : '';
+  var customText = ($('customReason')|| {}).value  ? $('customReason').value.trim() : '';
+
+  var t = T[currentLang];
+  var valid = true;
+  if (!riderId)   { showError('errRider');  valid = false; }
+  if (!eventTime) { showError('errTime');   valid = false; }
+  if (!selectedReason)                    { showError('errReason'); valid = false; }
+  if (selectedReason === 'other' && !customText) { showError('errCustom'); valid = false; }
+  if (!valid) return;
+
+  var reasonObj   = T['en'].reasons.filter(function(r) { return r.value === selectedReason; })[0] || {};
+  var reasonLabel = reasonObj.title || selectedReason;
+
+  var payload = {
+    action:       'reassignment',
+    riderId:      riderId,
+    orderId:      orderId || '—',
+    eventTime:    eventTime,
+    reason:       reasonLabel,
+    customReason: selectedReason === 'other' ? customText : '',
+    language:     currentLang,
+    submittedAt:  new Date().toISOString()
+  };
+
+  track('reassignment_submit_attempt', { reason: selectedReason, language: currentLang });
+
+  var btn = $('btnSubmit');
+  if (btn) { btn.textContent = t.btnSubmitting; btn.disabled = true; }
+
+  showScreen('screenSubmitting');
+
+  fetch(API_ENDPOINT, {
+    method:   'POST',
+    redirect: 'follow',
+    headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+    body:     JSON.stringify(payload)
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+    return r.text().then(function(text) {
+      try { return JSON.parse(text); }
+      catch(e) { throw new Error('Invalid server response: ' + text.substring(0,200)); }
+    });
+  })
+  .then(function(data) {
+    if (data && data.success) {
+      track('reassignment_submit_success', { reason: selectedReason, language: currentLang });
+      showScreen('screenSuccess');
+    } else {
+      throw new Error((data && data.message) || 'Unknown error from server.');
+    }
+  })
+  .catch(function(err) {
+    var msg = (err && err.message) || String(err);
+    if (msg.indexOf('Failed to fetch') !== -1) msg = 'Network error. Please check your connection and try again.';
+    track('reassignment_submit_error', { reason: msg.substring(0,100) });
+    if ($('errorDetail')) $('errorDetail').textContent = msg;
+    if (btn) { btn.textContent = T[currentLang].btnSubmit; btn.disabled = false; }
+    showScreen('screenError');
+  });
+}
+
+/* =====================================================================
+   RESET
+   ===================================================================== */
+function resetForm() {
+  selectedReason = '';
+  document.querySelectorAll('.reason-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.querySelectorAll('.reason-card input[type="radio"]').forEach(function(r) { r.checked = false; });
+  var wrap = $('customWrap'); if (wrap) wrap.classList.remove('open');
+  var ct   = $('customReason'); if (ct) ct.value = '';
+  ['errRider','errTime','errReason','errCustom'].forEach(clearError);
+
+  var now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  var et = $('eventTime'); if (et) et.value = now.toISOString().slice(0,16);
+
+  var btn = $('btnSubmit');
+  if (btn) { btn.textContent = T[currentLang].btnSubmit; btn.disabled = false; }
+
+  showScreen('screenForm');
+}
+</script>
+</body>
+</html>
