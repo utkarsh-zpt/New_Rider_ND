@@ -423,21 +423,12 @@ var API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyIFn5iGENEwOHIZB57c
 var T = {
   en: {
     langLabel:       'EN',
-    pageTitle:       'Order Reassignment Feedback',
-    heroIcon:        '🔄',
-    heroTitle:       'Order Reassignment\nFeedback',
-    heroSub:         'Help us understand why this order was reassigned. Your input improves the delivery experience for everyone.',
-    labelRider:      'Rider ID / Name',
-    labelOrder:      'Order ID',
-    labelOrderOpt:   '(optional)',
-    labelTime:       'Date & Time of Reassignment',
-    labelReason:     'Reason for Reassignment',
-    placeholderRider:'e.g. RID-4821 or Ravi Kumar',
-    placeholderOrder:'e.g. ORD-20240501-9182',
+    heroIcon:        '🛵',
+    heroTitle:       'We got to know you were not able to deliver your last order.',
+    heroSub:         'Do let us know the reason',
+    labelReason:     'Select from below reasons',
     placeholderOther:'Describe what happened in your own words…',
-    errRider:        'Please enter your Rider ID or name.',
-    errTime:         'Please select the date and time.',
-    errReason:       'Please select a reason for the reassignment.',
+    errReason:       'Please select a reason.',
     errCustom:       'Please describe the reason before submitting.',
     btnSubmit:       'Submit Feedback',
     btnSubmitting:   'Submitting…',
@@ -461,21 +452,12 @@ var T = {
   },
   hi: {
     langLabel:       'हिंदी',
-    pageTitle:       'ऑर्डर रीअसाइनमेंट फीडबैक',
-    heroIcon:        '🔄',
-    heroTitle:       'ऑर्डर रीअसाइनमेंट\nफीडबैक',
-    heroSub:         'हमें बताएं कि यह ऑर्डर रीअसाइन क्यों किया गया। आपकी जानकारी डिलीवरी अनुभव को बेहतर बनाने में मदद करती है।',
-    labelRider:      'राइडर आईडी / नाम',
-    labelOrder:      'ऑर्डर आईडी',
-    labelOrderOpt:   '(वैकल्पिक)',
-    labelTime:       'रीअसाइनमेंट की तारीख और समय',
-    labelReason:     'रीअसाइनमेंट का कारण',
-    placeholderRider:'जैसे RID-4821 या रवि कुमार',
-    placeholderOrder:'जैसे ORD-20240501-9182',
+    heroIcon:        '🛵',
+    heroTitle:       'हमें पता चला कि आप अपना पिछला ऑर्डर डिलीवर नहीं कर पाए।',
+    heroSub:         'कृपया हमें कारण बताएं',
+    labelReason:     'नीचे दिए गए कारणों में से चुनें',
     placeholderOther:'अपने शब्दों में बताएं कि क्या हुआ…',
-    errRider:        'कृपया अपनी राइडर आईडी या नाम दर्ज करें।',
-    errTime:         'कृपया तारीख और समय चुनें।',
-    errReason:       'कृपया रीअसाइनमेंट का कारण चुनें।',
+    errReason:       'कृपया एक कारण चुनें।',
     errCustom:       'सबमिट करने से पहले कारण बताएं।',
     btnSubmit:       'फीडबैक सबमिट करें',
     btnSubmitting:   'सबमिट हो रहा है…',
@@ -499,21 +481,12 @@ var T = {
   },
   mr: {
     langLabel:       'मराठी',
-    pageTitle:       'ऑर्डर पुनर्नियुक्ती अभिप्राय',
-    heroIcon:        '🔄',
-    heroTitle:       'ऑर्डर पुनर्नियुक्ती\nअभिप्राय',
-    heroSub:         'हा ऑर्डर पुनर्नियुक्त का झाला हे सांगा. तुमचा अभिप्राय डिलिव्हरी अनुभव सुधारण्यास मदत करतो.',
-    labelRider:      'रायडर आयडी / नाव',
-    labelOrder:      'ऑर्डर आयडी',
-    labelOrderOpt:   '(ऐच्छिक)',
-    labelTime:       'पुनर्नियुक्तीची तारीख व वेळ',
-    labelReason:     'पुनर्नियुक्तीचे कारण',
-    placeholderRider:'उदा. RID-4821 किंवा रवी कुमार',
-    placeholderOrder:'उदा. ORD-20240501-9182',
+    heroIcon:        '🛵',
+    heroTitle:       'आम्हाला कळले की तुम्ही तुमचा शेवटचा ऑर्डर डिलिव्हर करू शकला नाहीत.',
+    heroSub:         'कृपया आम्हाला कारण सांगा',
+    labelReason:     'खालील कारणांपैकी एक निवडा',
     placeholderOther:'तुमच्या शब्दांत काय झाले ते सांगा…',
-    errRider:        'कृपया तुमचा रायडर आयडी किंवा नाव टाका.',
-    errTime:         'कृपया तारीख आणि वेळ निवडा.',
-    errReason:       'कृपया पुनर्नियुक्तीचे कारण निवडा.',
+    errReason:       'कृपया एक कारण निवडा.',
     errCustom:       'सबमिट करण्यापूर्वी कारण सांगा.',
     btnSubmit:       'अभिप्राय सबमिट करा',
     btnSubmitting:   'सबमिट होत आहे…',
@@ -614,17 +587,13 @@ function renderNoRider() {
 
 /* ─── Main app shell (rendered once) ─── */
 function renderShell() {
-  var t   = T[currentLang];
-  var now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  var defaultDT = now.toISOString().slice(0, 16);
+  var t = T[currentLang];
 
   app.innerHTML =
     /* Top bar */
     '<div class="top-bar">' +
       '<div class="top-row">' +
         '<div class="brand"><div class="brand-mark">Z</div><div class="brand-name">Zepto</div></div>' +
-        '<div class="rider-tag">ID: ' + escapeHtml(RIDER_ID) + '</div>' +
       '</div>' +
       '<div class="lang-switcher" id="langSwitcher">' + renderLangSwitcher() + '</div>' +
     '</div>' +
@@ -636,39 +605,16 @@ function renderShell() {
       '<div class="screen active" id="screenForm">' +
         '<div class="hero">' +
           '<span class="hero-icon" id="heroIcon">' + t.heroIcon + '</span>' +
-          '<h1 class="hero-title" id="heroTitle">' + t.heroTitle.replace('\n','<br>') + '</h1>' +
+          '<h1 class="hero-title" id="heroTitle">' + t.heroTitle + '</h1>' +
           '<p class="hero-sub" id="heroSub">' + t.heroSub + '</p>' +
-        '</div>' +
-
-        /* Rider ID */
-        '<div class="field">' +
-          '<label class="field-label" for="riderId"><span id="lblRider">' + t.labelRider + '</span> <span class="req">*</span></label>' +
-          '<input type="text" id="riderId" value="' + escapeHtml(RIDER_ID) + '" />' +
-          '<div class="inline-error" id="errRider">' + t.errRider + '</div>' +
-        '</div>' +
-
-        /* Order ID */
-        '<div class="field">' +
-          '<label class="field-label" for="orderId">' +
-            '<span id="lblOrder">' + t.labelOrder + '</span> ' +
-            '<span style="font-weight:400;text-transform:none;font-size:11px;color:var(--text-muted);" id="lblOrderOpt">' + t.labelOrderOpt + '</span>' +
-          '</label>' +
-          '<input type="text" id="orderId" value="' + escapeHtml(ORDER_ID) + '" />' +
-        '</div>' +
-
-        /* Date & Time */
-        '<div class="field">' +
-          '<label class="field-label" for="eventTime"><span id="lblTime">' + t.labelTime + '</span> <span class="req">*</span></label>' +
-          '<input type="datetime-local" id="eventTime" value="' + defaultDT + '" />' +
-          '<div class="inline-error" id="errTime">' + t.errTime + '</div>' +
         '</div>' +
 
         /* Reason */
         '<div class="field">' +
-          '<div class="reasons-label"><span id="lblReason">' + t.labelReason + '</span> <span class="req">*</span></div>' +
+          '<div class="reasons-label"><span id="lblReason">' + t.labelReason + '</span></div>' +
           '<div class="reasons-list" id="reasonsList">' + buildReasonCards(t) + '</div>' +
           '<div class="custom-wrap" id="customWrap">' +
-            '<textarea class="custom-input" id="customReason" rows="3"></textarea>' +
+            '<textarea class="custom-input" id="customReason" rows="3" placeholder="' + t.placeholderOther + '"></textarea>' +
           '</div>' +
           '<div class="inline-error" id="errReason">' + t.errReason + '</div>' +
           '<div class="inline-error" id="errCustom">' + t.errCustom + '</div>' +
@@ -765,15 +711,10 @@ function switchLang(lang) {
   });
 
   /* ── Text nodes that are always present ── */
-  setText('heroTitle',       t.heroTitle.replace('\n','<br>'), true);
+  setText('heroIcon',        t.heroIcon);
+  setText('heroTitle',       t.heroTitle);
   setText('heroSub',         t.heroSub);
-  setText('lblRider',        t.labelRider);
-  setText('lblOrder',        t.labelOrder);
-  setText('lblOrderOpt',     t.labelOrderOpt);
-  setText('lblTime',         t.labelTime);
   setText('lblReason',       t.labelReason);
-  setText('errRider',        t.errRider);
-  setText('errTime',         t.errTime);
   setText('errReason',       t.errReason);
   setText('errCustom',       t.errCustom);
   setText('submittingTitle', t.submittingTitle);
@@ -812,8 +753,6 @@ function setText(id, text, asHtml) {
 }
 
 function updatePlaceholders(t) {
-  var ri = $('riderId');  if (ri) ri.placeholder = t.placeholderRider;
-  var oi = $('orderId');  if (oi) oi.placeholder = t.placeholderOrder;
   var ct = $('customReason'); if (ct) ct.placeholder = t.placeholderOther;
 }
 
@@ -862,18 +801,12 @@ function showError(id) {
 function clearError(id) { var el = $(id); if (el) el.classList.remove('show'); }
 
 function handleSubmit() {
-  ['errRider','errTime','errReason','errCustom'].forEach(clearError);
+  ['errReason','errCustom'].forEach(clearError);
 
-  var riderId    = ($('riderId')     || {}).value  ? $('riderId').value.trim()     : '';
-  var orderId    = ($('orderId')     || {}).value  ? $('orderId').value.trim()     : '';
-  var eventTime  = ($('eventTime')   || {}).value  ? $('eventTime').value           : '';
-  var customText = ($('customReason')|| {}).value  ? $('customReason').value.trim() : '';
+  var customText = ($('customReason') || {}).value ? $('customReason').value.trim() : '';
 
-  var t = T[currentLang];
   var valid = true;
-  if (!riderId)   { showError('errRider');  valid = false; }
-  if (!eventTime) { showError('errTime');   valid = false; }
-  if (!selectedReason)                    { showError('errReason'); valid = false; }
+  if (!selectedReason) { showError('errReason'); valid = false; }
   if (selectedReason === 'other' && !customText) { showError('errCustom'); valid = false; }
   if (!valid) return;
 
@@ -882,9 +815,9 @@ function handleSubmit() {
 
   var payload = {
     action:       'reassignment',
-    riderId:      riderId,
-    orderId:      orderId || '—',
-    eventTime:    eventTime,
+    riderId:      RIDER_ID  || '—',
+    orderId:      ORDER_ID  || '—',
+    eventTime:    new Date().toISOString(),
     reason:       reasonLabel,
     customReason: selectedReason === 'other' ? customText : '',
     language:     currentLang,
