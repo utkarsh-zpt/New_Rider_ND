@@ -46,7 +46,6 @@
       background: var(--bg-base);
       -webkit-font-smoothing: antialiased;
       font-size: 16px;
-      
     }
 
     /* ── App shell ── */
@@ -193,7 +192,6 @@
       -webkit-appearance: none;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      
     }
     input[type="text"]::placeholder { color: var(--text-muted); }
     input[type="text"]:focus,
@@ -830,6 +828,7 @@ function handleSubmit() {
   track('reassignment_submit_attempt', { reason: selectedReason, language: currentLang });
 
   var btn = $('btnSubmit');
+  var t   = T[currentLang];
   if (btn) { btn.textContent = t.btnSubmitting; btn.disabled = true; }
 
   showScreen('screenSubmitting');
