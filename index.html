@@ -553,9 +553,10 @@ function getQueryParams() {
   return params;
 }
 
-var QUERY    = getQueryParams();
-var RIDER_ID = QUERY.riderId || '';
-var ORDER_ID = QUERY.orderId || '';
+var QUERY     = getQueryParams();
+var RIDER_ID  = QUERY.riderId  || '';
+var ORDER_ID  = QUERY.orderId  || '';
+var DEEPLINK  = QUERY.deeplink || QUERY.deeplinkType || '';
 
 /* =====================================================================
    STATE
@@ -887,6 +888,7 @@ function handleSubmit() {
     reason:       reasonLabel,
     customReason: selectedReason === 'other' ? customText : '',
     language:     currentLang,
+    deeplink:     DEEPLINK,
     submittedAt:  new Date().toISOString()
   };
 
