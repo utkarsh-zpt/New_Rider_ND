@@ -142,6 +142,8 @@
       transition: border-color 0.2s;
     }
     .textarea-wrapper.focused { border-color: var(--primary); }
+    .textarea-wrapper.error { border-color: var(--red); background: #FFF8F8; }
+    .textarea-wrapper.error textarea { color: var(--text); }
 
     textarea {
       width: 100%; border: none; background: transparent;
@@ -273,7 +275,7 @@
         <div class="divider"></div>
 
         <div class="feedback-section">
-          <div class="section-label" id="l-feedback">Share your experience</div>
+          <div class="section-label" id="l-feedback">Share your experience <span style="color:var(--red)">*</span></div>
           <div class="textarea-wrapper" id="textareaWrapper">
             <textarea id="feedbackText" maxlength="500"
               placeholder="Share what you felt about the app, navigation, or delivery process…"
@@ -331,6 +333,7 @@
       starLabels: ["","Poor","Fair","Good","Great","Excellent! 🎉"],
       toastError: "❌ Something went wrong. Please try again.",
       toastRating: "Please select a star rating first.",
+      toastFeedback: "Please share your experience before submitting.",
       examples: [
         { text: "App was easy to understand",               type: "pos" },
         { text: "Couldn't find the customer location",      type: "neg" },
@@ -354,6 +357,7 @@
       starLabels: ["","बहुत खराब","ठीक-ठाक","अच्छा","बहुत अच्छा","बेहतरीन! 🎉"],
       toastError: "❌ कुछ गड़बड़ हुई। कृपया दोबारा कोशिश करें।",
       toastRating: "सबमिट करने से पहले स्टार रेटिंग ज़रूर चुनें।",
+      toastFeedback: "सबमिट करने से पहले अपना अनुभव ज़रूर लिखें।",
       examples: [
         { text: "ऐप समझना बहुत आसान था",                   type: "pos" },
         { text: "कस्टमर की लोकेशन ढूंढना मुश्किल था",       type: "neg" },
@@ -514,6 +518,7 @@
   function onTextInput() {
     const val = document.getElementById('feedbackText').value;
     document.getElementById('charCount').textContent = val.length;
+    if (val.trim()) document.getElementById('textareaWrapper').classList.remove('error');
   }
 
   // ── Toast ──
@@ -530,6 +535,12 @@
   async function submitForm() {
     const c = CONTENT[currentLang];
     if (currentRating === 0) { showToast(c.toastRating, 'error'); return; }
+    if (!document.getElementById('feedbackText').value.trim()) {
+      showToast(c.toastFeedback, 'error');
+      document.getElementById('textareaWrapper').classList.add('error');
+      document.getElementById('feedbackText').focus();
+      return;
+    }
 
     const btn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
