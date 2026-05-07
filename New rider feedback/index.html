@@ -574,6 +574,7 @@
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
   let isListening = false;
+  let wantListening = false; // user intent — survives auto-restart between utterances
 
   const SPEECH_LANG = { en: 'en-IN', hi: 'hi-IN' };
 
@@ -581,62 +582,69 @@
     document.getElementById('micBtn').classList.add('unsupported');
   } else {
     recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false;   // one utterance per session — avoids Android accumulation bug
     recognition.interimResults = true;
 
-    let priorText = ''; // text in textarea before voice session started
+    let sessionBase = ''; // textarea content at the start of this utterance
 
     recognition.onstart = () => {
       isListening = true;
+      // Snapshot current textarea as the base for this utterance
+      sessionBase = document.getElementById('feedbackText').value.trimEnd();
       document.getElementById('micBtn').classList.add('listening');
-      track('voice_started', { language: currentLang });
     };
 
     recognition.onresult = (e) => {
-      // Collect all finalized results
-      let finalText = '';
-      for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-      }
-      // Android sends each interim update as a NEW result entry where every
-      // entry contains the full transcript so far — so we only use the LAST
-      // result as interim instead of concatenating all of them.
-      const lastResult = e.results[e.results.length - 1];
-      const interimText = lastResult.isFinal ? '' : lastResult[0].transcript;
-
-      const sep = priorText ? ' ' : '';
+      // With continuous=false there is exactly one result; transcript updates
+      // in place as speech progresses — no accumulation across results.
+      const transcript = e.results[0][0].transcript;
+      const sep = sessionBase ? ' ' : '';
       const ta = document.getElementById('feedbackText');
-      ta.value = (priorText + sep + finalText + interimText).trimStart();
+      ta.value = (sessionBase + sep + transcript).trimStart();
       document.getElementById('charCount').textContent = ta.value.length;
     };
 
     recognition.onend = () => {
       isListening = false;
-      document.getElementById('micBtn').classList.remove('listening');
       const ta = document.getElementById('feedbackText');
       ta.value = ta.value.trimEnd();
-      const charLen = ta.value.length;
-      document.getElementById('charCount').textContent = charLen;
-      track('voice_stopped', { language: currentLang, chars_captured: charLen });
+      document.getElementById('charCount').textContent = ta.value.length;
+
+      if (wantListening) {
+        // Auto-restart for the next utterance — keeps mic active until user taps to stop
+        try { recognition.start(); } catch (_) {}
+        return;
+      }
+
+      document.getElementById('micBtn').classList.remove('listening');
+      track('voice_stopped', { language: currentLang, chars_captured: ta.value.length });
     };
 
     recognition.onerror = (e) => {
-      if (e.error !== 'no-speech') showToast('🎤 Mic error: ' + e.error, 'error');
-      stopSpeech();
+      if (e.error === 'no-speech') return; // silence between utterances — ignore
+      wantListening = false;
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+      showToast('🎤 Mic error: ' + e.error, 'error');
     };
   }
 
   function toggleSpeech() {
     if (!recognition) return;
-    if (isListening) { stopSpeech(); return; }
-    // Snapshot whatever is already in the textarea before listening starts
-    priorText = document.getElementById('feedbackText').value.trimEnd();
+    if (wantListening) {
+      wantListening = false;
+      try { recognition.stop(); } catch (_) {}
+      return;
+    }
+    wantListening = true;
     recognition.lang = SPEECH_LANG[currentLang] || 'en-IN';
-    recognition.start();
+    track('voice_started', { language: currentLang });
+    try { recognition.start(); } catch (_) {}
   }
 
   function stopSpeech() {
-    if (recognition && isListening) recognition.stop();
+    wantListening = false;
+    try { if (recognition) recognition.stop(); } catch (_) {}
   }
 
   // Stop mic if language is switched mid-recording
