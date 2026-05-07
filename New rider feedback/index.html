@@ -493,6 +493,7 @@
     submitText.innerHTML = '<span class="spinner"></span>' + c.submitting;
 
     const payload = {
+      source: 'rider_feedback',
       riderId: riderId, rating: currentRating,
       feedback: document.getElementById('feedbackText').value.trim(),
       language: currentLang, timestamp: new Date().toISOString()
