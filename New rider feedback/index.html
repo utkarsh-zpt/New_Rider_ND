@@ -593,14 +593,17 @@
     };
 
     recognition.onresult = (e) => {
-      // Rebuild from ALL results each event — avoids double-append when
-      // browsers reset e.resultIndex to 0 on every callback (common on Android)
+      // Collect all finalized results
       let finalText = '';
-      let interimText = '';
       for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) { finalText += e.results[i][0].transcript; }
-        else                      { interimText += e.results[i][0].transcript; }
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
       }
+      // Android sends each interim update as a NEW result entry where every
+      // entry contains the full transcript so far — so we only use the LAST
+      // result as interim instead of concatenating all of them.
+      const lastResult = e.results[e.results.length - 1];
+      const interimText = lastResult.isFinal ? '' : lastResult[0].transcript;
+
       const sep = priorText ? ' ' : '';
       const ta = document.getElementById('feedbackText');
       ta.value = (priorText + sep + finalText + interimText).trimStart();
@@ -641,7 +644,6 @@
   setLang = function(lang) { stopSpeech(); _origSetLang(lang); };
 
   setLang('en');
-  
 </script>
 </body>
 </html>
