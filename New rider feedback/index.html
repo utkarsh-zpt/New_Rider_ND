@@ -34,21 +34,42 @@
 
     .container { width: 100%; max-width: 480px; }
 
-    /* Language Toggle */
-    .lang-toggle { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+    /* Language Toggle — inside header */
+    .header-lang { display: flex; justify-content: center; margin-top: 18px; }
     .lang-btn-group {
       display: flex;
-      background: var(--card);
-      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
       border-radius: 50px;
       overflow: hidden;
     }
     .lang-btn {
-      padding: 7px 18px; font-size: 13px; font-weight: 600;
+      padding: 7px 20px; font-size: 13px; font-weight: 600;
       border: none; background: transparent; cursor: pointer;
-      color: var(--subtext); transition: all 0.2s;
+      color: rgba(255,255,255,0.65); transition: all 0.2s;
     }
-    .lang-btn.active { background: var(--primary); color: #fff; border-radius: 50px; }
+    .lang-btn.active { background: #fff; color: var(--primary); border-radius: 50px; }
+
+    /* Mic button */
+    .feedback-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+    .char-count { font-size: 11px; color: var(--subtext); }
+    .mic-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 50px;
+      border: 1.5px solid var(--border); background: #fff;
+      font-size: 12px; font-weight: 600; color: var(--subtext);
+      cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .mic-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .mic-btn.listening {
+      border-color: var(--red); color: var(--red);
+      background: #FEF2F2; animation: pulse 1.2s ease-in-out infinite;
+    }
+    .mic-btn.unsupported { display: none; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+      50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    }
 
     /* Card */
     .card { background: var(--card); border-radius: 14px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden; }
@@ -61,13 +82,21 @@
 
     .body { padding: 24px; }
 
+    .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .section-label {
       font-size: 12px; font-weight: 700; color: var(--subtext);
-      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: 0.06em;
     }
+    .rating-badge {
+      font-size: 12px; font-weight: 700; color: var(--primary);
+      background: rgba(104,26,137,0.1); padding: 3px 10px;
+      border-radius: 50px; opacity: 0; transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .rating-badge.visible { opacity: 1; }
 
     /* Stars */
-    .star-section { margin-bottom: 28px; }
+    .star-section { margin-bottom: 12px; }
     .stars { display: flex; gap: 8px; justify-content: center; }
     .star {
       font-size: 42px; cursor: pointer; color: var(--star-inactive);
@@ -75,11 +104,11 @@
     }
     .star.filled { color: var(--star-active); }
     .star:hover { transform: scale(1.15); }
-    .star-label { text-align: center; margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--primary); min-height: 22px; }
+    .star-label { text-align: center; margin-top: 6px; font-size: 14px; font-weight: 600; color: var(--primary); min-height: 20px; }
 
-    .divider { height: 1px; background: var(--border); margin: 4px 0 24px; }
+    .divider { height: 1px; background: var(--border); margin: 10px 0 16px; }
 
-    /* Textarea + Carousel */
+    /* Textarea */
     .feedback-section { margin-bottom: 28px; }
 
     .textarea-wrapper {
@@ -89,66 +118,60 @@
       background: #fff;
       cursor: text;
       transition: border-color 0.2s;
-      overflow: hidden;
-      min-height: 150px;
     }
     .textarea-wrapper.focused { border-color: var(--primary); }
 
-    /* Transparent textarea floats on top */
     textarea {
-      position: relative; z-index: 2;
       width: 100%; border: none; background: transparent;
-      padding: 14px 14px 40px;
+      padding: 14px;
       font-size: 14px; font-family: inherit; color: var(--text);
-      resize: none; height: 150px; line-height: 1.6; outline: none; display: block;
+      resize: none; height: 120px; line-height: 1.6; outline: none; display: block;
+      border-radius: 10px;
+    }
+    textarea::placeholder { color: #C4C4CF; }
+
+    /* Carousel strip — below textarea, always visible */
+    .carousel-strip {
+      margin-top: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px 8px;
+      min-height: 52px;
+      position: relative;
+      overflow: hidden;
     }
 
-    /* Carousel placeholder layer */
-    .carousel-placeholder {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      padding: 14px; pointer-events: none; z-index: 1; overflow: hidden;
-    }
-    .carousel-placeholder.hidden { display: none; }
-
-    /* Each slide is absolutely stacked; keyframes control visibility */
     .carousel-item {
-      position: absolute;
-      top: 14px; left: 14px; right: 14px;
       display: flex; align-items: flex-start; gap: 8px;
-      opacity: 0;
+      opacity: 0; position: absolute; top: 10px; left: 12px; right: 12px;
     }
     @keyframes slideUp {
-      0%   { opacity: 0; transform: translateY(16px); }
+      0%   { opacity: 0; transform: translateY(10px); }
       15%  { opacity: 1; transform: translateY(0); }
       80%  { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-14px); }
+      100% { opacity: 0; transform: translateY(-10px); }
     }
-    .carousel-item.playing {
-      animation: slideUp var(--slide-dur) ease forwards;
-    }
+    .carousel-item.playing { animation: slideUp var(--slide-dur) ease forwards; }
 
     .carousel-badge {
       flex-shrink: 0; margin-top: 2px;
-      width: 22px; height: 22px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; font-size: 12px;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
     }
     .carousel-badge.pos { background: #D1FAE5; }
     .carousel-badge.neg { background: #FEE2E2; }
 
-    .carousel-text {
-      font-size: 14px; line-height: 1.6; color: #9CA3AF; font-style: italic;
-    }
+    .carousel-text { font-size: 13px; line-height: 1.5; color: var(--subtext); font-style: italic; }
 
-    /* Progress dots */
     .carousel-dots {
-      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 5px; z-index: 3; pointer-events: none;
+      display: flex; gap: 4px; justify-content: center; margin-top: 28px;
     }
     .carousel-dot {
-      width: 5px; height: 5px; border-radius: 50%;
+      width: 4px; height: 4px; border-radius: 50%;
       background: var(--border); transition: background 0.3s, width 0.3s;
     }
-    .carousel-dot.active { background: var(--primary); width: 16px; border-radius: 3px; }
+    .carousel-dot.active { background: var(--primary); width: 14px; border-radius: 2px; }
 
     .char-count { text-align: right; font-size: 11px; color: var(--subtext); margin-top: 5px; }
 
@@ -196,25 +219,27 @@
 <body>
 <div class="container">
 
-  <div class="lang-toggle">
-    <div class="lang-btn-group">
-      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" id="btn-hi" onclick="setLang('hi')">हिंदी</button>
-    </div>
-  </div>
-
   <div class="card">
     <div class="header">
       <div class="header-icon">🛵</div>
       <h1 id="h-title">How was your first delivery?</h1>
       <p id="h-sub">Your feedback helps us improve the experience for all riders.</p>
+      <div class="header-lang">
+        <div class="lang-btn-group">
+          <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" id="btn-hi" onclick="setLang('hi')">हिंदी</button>
+        </div>
+      </div>
     </div>
 
     <div class="body">
       <div class="form-content" id="formContent">
 
         <div class="star-section">
-          <div class="section-label" id="l-rating">Rate your experience</div>
+          <div class="section-row">
+            <div class="section-label" id="l-rating">Rate your experience</div>
+            <div class="rating-badge" id="ratingBadge"></div>
+          </div>
           <div class="stars">
             <span class="star" data-val="1" onclick="setRating(1)">★</span>
             <span class="star" data-val="2" onclick="setRating(2)">★</span>
@@ -222,28 +247,29 @@
             <span class="star" data-val="4" onclick="setRating(4)">★</span>
             <span class="star" data-val="5" onclick="setRating(5)">★</span>
           </div>
-          <div class="star-label" id="starLabel"></div>
         </div>
 
         <div class="divider"></div>
 
         <div class="feedback-section">
           <div class="section-label" id="l-feedback">Share your experience</div>
-          <div class="textarea-wrapper" id="textareaWrapper"
-               onclick="document.getElementById('feedbackText').focus()">
-
-            <div class="carousel-placeholder" id="carouselPlaceholder">
-              <div id="carouselTrack"></div>
-            </div>
-
+          <div class="textarea-wrapper" id="textareaWrapper">
             <textarea id="feedbackText" maxlength="500"
+              placeholder="Share what you felt about the app, navigation, or delivery process…"
               oninput="onTextInput()"
               onfocus="onTextFocus()"
               onblur="onTextBlur()"></textarea>
+          </div>
 
+          <div class="carousel-strip">
+            <div id="carouselTrack"></div>
             <div class="carousel-dots" id="carouselDots"></div>
           </div>
-          <div class="char-count"><span id="charCount">0</span>/500</div>
+
+          <div class="feedback-meta">
+            <button class="mic-btn" id="micBtn" onclick="toggleSpeech()">🎤 <span id="micLabel">Voice</span></button>
+            <div class="char-count"><span id="charCount">0</span>/500</div>
+          </div>
         </div>
 
         <button class="submit-btn" id="submitBtn" onclick="submitForm()">
@@ -339,8 +365,11 @@
     document.getElementById('submitText').textContent = c.submit;
     document.getElementById('s-title').textContent    = c.successTitle;
     document.getElementById('s-sub').textContent      = c.successSub;
-    if (currentRating > 0)
-      document.getElementById('starLabel').textContent = c.starLabels[currentRating];
+    if (currentRating > 0) {
+      const badge = document.getElementById('ratingBadge');
+      badge.textContent = c.starLabels[currentRating];
+      badge.classList.add('visible');
+    }
     buildCarousel();
   }
 
@@ -350,7 +379,9 @@
     document.querySelectorAll('.star').forEach(s =>
       s.classList.toggle('filled', parseInt(s.dataset.val) <= val)
     );
-    document.getElementById('starLabel').textContent = CONTENT[currentLang].starLabels[val];
+    const badge = document.getElementById('ratingBadge');
+    badge.textContent = CONTENT[currentLang].starLabels[val];
+    badge.classList.add('visible');
   }
   document.querySelectorAll('.star').forEach(star => {
     star.addEventListener('mouseenter', () => {
@@ -379,7 +410,6 @@
     carouselDotNodes = [];
     carouselIndex    = 0;
 
-    // Set CSS variable for animation duration
     document.documentElement.style.setProperty('--slide-dur', slideDuration + 'ms');
 
     examples.forEach((ex, i) => {
@@ -405,9 +435,7 @@
       carouselDotNodes.push(dot);
     });
 
-    if (!document.getElementById('feedbackText').value.trim()) {
-      startCarousel();
-    }
+    startCarousel();
   }
 
   function playSlide(index) {
@@ -447,30 +475,15 @@
   // ── Textarea events ──
   function onTextFocus() {
     document.getElementById('textareaWrapper').classList.add('focused');
-    // Pause but keep placeholder visible if field is still empty
-    if (!document.getElementById('feedbackText').value.trim()) {
-      stopCarousel();
-    }
   }
 
   function onTextBlur() {
     document.getElementById('textareaWrapper').classList.remove('focused');
-    if (!document.getElementById('feedbackText').value.trim()) {
-      startCarousel();
-      document.getElementById('carouselPlaceholder').classList.remove('hidden');
-    }
   }
 
   function onTextInput() {
     const val = document.getElementById('feedbackText').value;
     document.getElementById('charCount').textContent = val.length;
-    if (val.length > 0) {
-      document.getElementById('carouselPlaceholder').classList.add('hidden');
-      stopCarousel();
-    } else {
-      document.getElementById('carouselPlaceholder').classList.remove('hidden');
-      startCarousel();
-    }
   }
 
   // ── Toast ──
@@ -517,9 +530,77 @@
 
   function showSuccess() {
     stopCarousel();
+    stopSpeech();
     document.getElementById('formContent').classList.add('hidden');
     document.getElementById('successScreen').classList.add('visible');
   }
+
+  // ── Speech-to-text ──
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let isListening = false;
+
+  const SPEECH_LANG = { en: 'en-IN', hi: 'hi-IN' };
+
+  if (!SpeechRecognition) {
+    document.getElementById('micBtn').classList.add('unsupported');
+  } else {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    let committed = '';
+
+    recognition.onstart = () => {
+      isListening = true;
+      const btn = document.getElementById('micBtn');
+      btn.classList.add('listening');
+      document.getElementById('micLabel').textContent = 'Listening…';
+    };
+
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) { committed += t + ' '; }
+        else { interim = t; }
+      }
+      const ta = document.getElementById('feedbackText');
+      ta.value = committed + interim;
+      document.getElementById('charCount').textContent = ta.value.length;
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      const btn = document.getElementById('micBtn');
+      btn.classList.remove('listening');
+      document.getElementById('micLabel').textContent = 'Voice';
+      const ta = document.getElementById('feedbackText');
+      ta.value = ta.value.trimEnd();
+      document.getElementById('charCount').textContent = ta.value.length;
+    };
+
+    recognition.onerror = (e) => {
+      if (e.error !== 'no-speech') showToast('🎤 Mic error: ' + e.error, 'error');
+      stopSpeech();
+    };
+  }
+
+  function toggleSpeech() {
+    if (!recognition) return;
+    if (isListening) { stopSpeech(); return; }
+    committed = '';
+    recognition.lang = SPEECH_LANG[currentLang] || 'en-IN';
+    recognition.start();
+  }
+
+  function stopSpeech() {
+    if (recognition && isListening) recognition.stop();
+  }
+
+  // Stop mic if language is switched mid-recording
+  const _origSetLang = setLang;
+  setLang = function(lang) { stopSpeech(); _origSetLang(lang); };
 
   setLang('en');
 </script>
