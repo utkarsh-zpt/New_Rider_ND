@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rider Feedback | राइडर फ़ीडबैक</title>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JJQ5WE4YG3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-JJQ5WE4YG3', {
+      page_location: window.location.origin + window.location.pathname
+    });
+  </script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -288,6 +300,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  function track(event, params) {
+    if (typeof gtag === 'function') gtag('event', event, params || {});
+  }
+
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwQw6kZhpYqt7Mm7j84_eN4eAJS5pEWAv0EsWwZBUofsj6o6QRRBth1DPjsxyK_yg5uw/exec";
 
   const CONTENT = {
@@ -352,6 +368,7 @@
 
   // ── Language ──
   function setLang(lang) {
+    if (lang !== currentLang) track('language_switch', { language: lang });
     currentLang = lang;
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
     document.getElementById('btn-hi').classList.toggle('active', lang === 'hi');
@@ -380,6 +397,7 @@
     const badge = document.getElementById('ratingBadge');
     badge.textContent = CONTENT[currentLang].starLabels[val];
     badge.classList.add('visible');
+    track('rating_selected', { rating: val, language: currentLang });
   }
   document.querySelectorAll('.star').forEach(star => {
     star.addEventListener('mouseenter', () => {
@@ -518,6 +536,12 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
+      track('feedback_submitted', {
+        rating: currentRating,
+        language: currentLang,
+        has_text: payload.feedback.length > 0,
+        char_count: payload.feedback.length
+      });
       showSuccess();
     } catch (err) {
       showToast(c.toastError, 'error');
@@ -554,6 +578,7 @@
       const btn = document.getElementById('micBtn');
       btn.classList.add('listening');
       document.getElementById('micLabel').textContent = 'Listening…';
+      track('voice_started', { language: currentLang });
     };
 
     recognition.onresult = (e) => {
@@ -575,7 +600,9 @@
       document.getElementById('micLabel').textContent = 'Voice';
       const ta = document.getElementById('feedbackText');
       ta.value = ta.value.trimEnd();
-      document.getElementById('charCount').textContent = ta.value.length;
+      const charLen = ta.value.length;
+      document.getElementById('charCount').textContent = charLen;
+      track('voice_stopped', { language: currentLang, chars_captured: charLen });
     };
 
     recognition.onerror = (e) => {
