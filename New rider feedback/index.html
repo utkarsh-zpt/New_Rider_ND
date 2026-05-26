@@ -377,6 +377,7 @@
   let currentRating = 0;
   const urlParams   = new URLSearchParams(window.location.search);
   const riderId     = urlParams.get('rider_id') || urlParams.get('riderId') || '';
+  const orderCount  = urlParams.get('order_count') || urlParams.get('orderCount') || '';
 
   // ── Carousel state ──
   let carouselIndex    = 0;
@@ -549,7 +550,7 @@
 
     const payload = {
       source: 'rider_feedback',
-      riderId: riderId, rating: currentRating,
+      riderId: riderId, orderCount: orderCount, rating: currentRating,
       feedback: document.getElementById('feedbackText').value.trim(),
       language: currentLang, timestamp: new Date().toISOString()
     };
