@@ -377,8 +377,10 @@
   let currentRating = 0;
   const urlParams        = new URLSearchParams(window.location.search);
   const riderId          = urlParams.get('rider_id') || urlParams.get('riderId') || '';
+  const orderCount       = urlParams.get('order_count') || urlParams.get('orderCount') || '';
   const daysInactive     = urlParams.get('days_inactive') || urlParams.get('daysInactive') || '7';
   const lastDeliveryDate = urlParams.get('last_delivery') || urlParams.get('lastDelivery') || '';
+  const deeplink         = urlParams.get('deeplink') || '';
 
   // ── Carousel state ──
   let carouselIndex    = 0;
@@ -549,10 +551,12 @@
     submitText.innerHTML = '<span class="spinner"></span>' + c.submitting;
 
     const payload = {
-      source: 'rider_winback',
+      source: 'rider_feedback',
       riderId: riderId,
+      orderCount: orderCount,
       daysInactive: daysInactive,
       lastDeliveryDate: lastDeliveryDate,
+      deeplink: deeplink,
       rating: currentRating,
       feedback: document.getElementById('feedbackText').value.trim(),
       language: currentLang,
@@ -566,9 +570,10 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
-      track('winback_submitted', {
+      track('feedback_submitted', {
         rating: currentRating,
         language: currentLang,
+        order_count: orderCount,
         days_inactive: daysInactive,
         has_text: payload.feedback.length > 0,
         char_count: payload.feedback.length
