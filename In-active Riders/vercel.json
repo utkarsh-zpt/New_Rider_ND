@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/we-miss-you", "destination": "/index.html" }
+  ]
+}
