@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rider Feedback | राइडर फ़ीडबैक</title>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JJQ5WE4YG3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-JJQ5WE4YG3', {
+      page_location: window.location.origin + window.location.pathname
+    });
+  </script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #681A89;
+      --primary-dark: #4A1264;
+      --primary-glow: rgba(104, 26, 137, 0.25);
+      --bg: #F8F7FB;
+      --card: #FFFFFF;
+      --text: #1A1A2E;
+      --subtext: #6B7280;
+      --border: #EAEAF0;
+      --green: #10B981;
+      --red: #EF4444;
+      --star-active: #FFD23F;
+      --star-inactive: #D1D5DB;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    .container { width: 100%; max-width: 480px; }
+
+    /* Language Toggle — inside header */
+    .header-lang { display: flex; justify-content: center; margin-top: 18px; }
+    .lang-btn-group {
+      display: flex;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+    .lang-btn {
+      padding: 7px 20px; font-size: 13px; font-weight: 600;
+      border: none; background: transparent; cursor: pointer;
+      color: rgba(255,255,255,0.65); transition: all 0.2s;
+    }
+    .lang-btn.active { background: #fff; color: var(--primary); border-radius: 50px; }
+
+    /* Mic button — inside textarea */
+    .textarea-wrapper { position: relative; }
+    textarea { padding: 12px 12px 48px; }
+
+    .mic-btn {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      height: 32px; border-radius: 8px;
+      border: none; cursor: pointer; user-select: none;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: rgba(104,26,137,0.08);
+      color: var(--primary);
+      font-size: 12px; font-weight: 700; font-family: inherit;
+      transition: background 0.2s, transform 0.1s;
+      z-index: 2;
+    }
+    .mic-btn svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+    .mic-btn:hover { background: rgba(104,26,137,0.14); }
+    .mic-btn:active { transform: scale(0.98); }
+    .mic-btn.listening {
+      background: #FEF2F2; color: var(--red);
+      animation: mic-pulse 1.3s ease-out infinite;
+    }
+    .mic-btn.unsupported { display: none; }
+    @keyframes mic-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+      70%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+
+    .feedback-bottom { display: flex; justify-content: flex-end; margin-top: 5px; }
+    .char-count { font-size: 11px; color: var(--subtext); }
+
+    /* Card */
+    .card { background: var(--card); border-radius: 14px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden; }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #2A0E3A 0%, var(--primary) 100%); padding: 22px 24px 20px; text-align: center; }
+    .header h1 { color: #fff; font-size: 22px; font-weight: 800; line-height: 1.3; letter-spacing: -0.3px; }
+    .header p { color: rgba(255,255,255,0.80); font-size: 14px; margin-top: 6px; line-height: 1.5; }
+
+    .body { padding: 24px; }
+
+    .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-label {
+      font-size: 12px; font-weight: 700; color: var(--subtext);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .rating-badge {
+      font-size: 12px; font-weight: 700; color: var(--primary);
+      background: rgba(104,26,137,0.1); padding: 3px 10px;
+      border-radius: 50px; opacity: 0; transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .rating-badge.visible { opacity: 1; }
+
+    /* Stars */
+    .star-section { margin-bottom: 12px; }
+    .stars { display: flex; gap: 8px; justify-content: center; }
+    .star {
+      font-size: 42px; cursor: pointer; color: var(--star-inactive);
+      transition: color 0.15s, transform 0.1s; user-select: none; line-height: 1;
+    }
+    .star.filled { color: var(--star-active); }
+    .star:hover { transform: scale(1.15); }
+    .star-label { text-align: center; margin-top: 6px; font-size: 14px; font-weight: 600; color: var(--primary); min-height: 20px; }
+
+    .divider { height: 1px; background: var(--border); margin: 10px 0 16px; }
+
+    /* Textarea */
+    .feedback-section { margin-bottom: 28px; }
+
+    .textarea-wrapper {
+      position: relative;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      cursor: text;
+      transition: border-color 0.2s;
+    }
+    .textarea-wrapper.focused { border-color: var(--primary); }
+    .textarea-wrapper.error { border-color: var(--red); background: #FFF8F8; }
+    .textarea-wrapper.error textarea { color: var(--text); }
+
+    textarea {
+      width: 100%; border: none; background: transparent;
+      padding: 14px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      resize: none; height: 120px; line-height: 1.6; outline: none; display: block;
+      border-radius: 10px;
+    }
+    textarea::placeholder { color: #C4C4CF; }
+
+    /* Carousel strip — below textarea, always visible */
+    .carousel-strip {
+      margin-top: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px 8px;
+      min-height: 52px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .carousel-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      opacity: 0; position: absolute; top: 10px; left: 12px; right: 12px;
+    }
+    @keyframes slideUp {
+      0%   { opacity: 0; transform: translateY(10px); }
+      15%  { opacity: 1; transform: translateY(0); }
+      80%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .carousel-item.playing { animation: slideUp var(--slide-dur) ease forwards; }
+
+    .carousel-badge {
+      flex-shrink: 0; margin-top: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
+    }
+    .carousel-badge.pos { background: #D1FAE5; }
+    .carousel-badge.neg { background: #FEE2E2; }
+
+    .carousel-text { font-size: 13px; line-height: 1.5; color: var(--subtext); font-style: italic; }
+
+    .carousel-dots {
+      display: flex; gap: 4px; justify-content: center; margin-top: 28px;
+    }
+    .carousel-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--border); transition: background 0.3s, width 0.3s;
+    }
+    .carousel-dot.active { background: var(--primary); width: 14px; border-radius: 2px; }
+
+    .char-count { text-align: right; font-size: 11px; color: var(--subtext); margin-top: 5px; }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%; padding: 15px;
+      background: var(--primary); color: #fff; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s;
+    }
+    .submit-btn:hover { background: var(--primary-dark); }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { background: #D1D5DB; cursor: not-allowed; transform: none; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A1A1A; color: #fff;
+      padding: 13px 22px; border-radius: 50px; font-size: 14px; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999; max-width: 90vw; text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--red); }
+
+    /* Success */
+    .success-screen { display: none; text-align: center; padding: 48px 24px; }
+    .success-screen.visible { display: block; }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-screen h2 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .success-screen p { font-size: 14px; color: var(--subtext); line-height: 1.6; }
+
+    .form-content.hidden { display: none; }
+
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 7px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="card">
+    <div class="header">
+      <h1 id="h-title">🛵 How was your delivery?</h1>
+      <p id="h-sub">Your feedback helps us improve the experience for all riders.</p>
+      <div class="header-lang">
+        <div class="lang-btn-group">
+          <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" id="btn-hi" onclick="setLang('hi')">हिंदी</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="form-content" id="formContent">
+
+        <div class="star-section">
+          <div class="section-row">
+            <div class="section-label" id="l-rating">Rate your experience</div>
+            <div class="rating-badge" id="ratingBadge"></div>
+          </div>
+          <div class="stars">
+            <span class="star" data-val="1" onclick="setRating(1)">★</span>
+            <span class="star" data-val="2" onclick="setRating(2)">★</span>
+            <span class="star" data-val="3" onclick="setRating(3)">★</span>
+            <span class="star" data-val="4" onclick="setRating(4)">★</span>
+            <span class="star" data-val="5" onclick="setRating(5)">★</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="feedback-section">
+          <div class="section-label" id="l-feedback">Share your experience <span style="color:var(--red)">*</span></div>
+          <div class="textarea-wrapper" id="textareaWrapper">
+            <textarea id="feedbackText" maxlength="500"
+              placeholder="Share what you felt about the app, navigation, or delivery process…"
+              oninput="onTextInput()"
+              onfocus="onTextFocus()"
+              onblur="onTextBlur()"></textarea>
+            <button class="mic-btn" id="micBtn" onclick="toggleSpeech()">
+              <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+              <span id="micLabel">Speak here</span>
+            </button>
+          </div>
+
+          <div class="carousel-strip">
+            <div id="carouselTrack"></div>
+            <div class="carousel-dots" id="carouselDots"></div>
+          </div>
+
+          <div class="feedback-bottom">
+            <div class="char-count"><span id="charCount">0</span>/500</div>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+          <span id="submitText">Submit Feedback</span>
+        </button>
+
+      </div>
+
+      <div class="success-screen" id="successScreen">
+        <div class="success-icon">🎉</div>
+        <h2 id="s-title">Thank you!</h2>
+        <p id="s-sub">Your feedback has been recorded. It helps us make every delivery better for riders like you.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function track(event, params) {
+    if (typeof gtag === 'function') gtag('event', event, params || {});
+  }
+
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwQw6kZhpYqt7Mm7j84_eN4eAJS5pEWAv0EsWwZBUofsj6o6QRRBth1DPjsxyK_yg5uw/exec";
+
+  const CONTENT = {
+    en: {
+      title: "🛵 How was your delivery?",
+      sub: "Your feedback helps us improve the experience for all riders.",
+      rating: "Rate your experience", feedback: "Share your experience",
+      submit: "Submit Feedback", submitting: "Submitting...",
+      successTitle: "Thank you!",
+      successSub: "Your feedback has been recorded. It helps us make every delivery better for riders like you.",
+      starLabels: ["","Poor","Fair","Good","Great","Excellent! 🎉"],
+      toastError: "❌ Something went wrong. Please try again.",
+      toastRating: "Please select a star rating first.",
+      toastFeedback: "Please share your experience before submitting.",
+      examples: [
+        { text: "App was easy to understand",               type: "pos" },
+        { text: "Couldn't find the customer location",      type: "neg" },
+        { text: "Navigation was very smooth",               type: "pos" },
+        { text: "Took a lot of time to figure out the app", type: "neg" },
+        { text: "Delivery process was clear and simple",    type: "pos" },
+        { text: "App flow was confusing at first",          type: "neg" },
+        { text: "The app guided me really well",            type: "pos" },
+        { text: "App was slow to load",                     type: "neg" },
+        { text: "Found the customer location easily",       type: "pos" },
+        { text: "Needed more guidance on first steps",      type: "neg" },
+      ]
+    },
+    hi: {
+      title: "🛵 आपकी डिलीवरी कैसी रही?",
+      sub: "आपका फ़ीडबैक सभी राइडर्स के अनुभव को बेहतर बनाने में मदद करता है।",
+      rating: "अपना अनुभव रेट करें", feedback: "अपना अनुभव बताएं",
+      submit: "फ़ीडबैक सबमिट करें", submitting: "सबमिट हो रहा है...",
+      successTitle: "धन्यवाद!",
+      successSub: "आपका फ़ीडबैक रिकॉर्ड हो गया है। इससे हम सभी राइडर्स के लिए डिलीवरी बेहतर बना पाएंगे।",
+      starLabels: ["","बहुत खराब","ठीक-ठाक","अच्छा","बहुत अच्छा","बेहतरीन! 🎉"],
+      toastError: "❌ कुछ गड़बड़ हुई। कृपया दोबारा कोशिश करें।",
+      toastRating: "सबमिट करने से पहले स्टार रेटिंग ज़रूर चुनें।",
+      toastFeedback: "सबमिट करने से पहले अपना अनुभव ज़रूर लिखें।",
+      examples: [
+        { text: "ऐप समझना बहुत आसान था",                   type: "pos" },
+        { text: "कस्टमर की लोकेशन ढूंढना मुश्किल था",       type: "neg" },
+        { text: "नेविगेशन बहुत अच्छा था",                   type: "pos" },
+        { text: "ऐप समझने में काफी समय लगा",                type: "neg" },
+        { text: "डिलीवरी का प्रोसेस बिल्कुल साफ था",        type: "pos" },
+        { text: "ऐप का flow confusing था",                  type: "neg" },
+        { text: "ऐप ने बहुत अच्छे से गाइड किया",            type: "pos" },
+        { text: "ऐप बहुत slow load हो रहा था",              type: "neg" },
+        { text: "कस्टमर की लोकेशन आसानी से मिल गई",         type: "pos" },
+        { text: "पहले steps के लिए और guidance चाहिए थी",   type: "neg" },
+      ]
+    }
+  };
+
+  let currentLang   = 'en';
+  let currentRating = 0;
+  const urlParams   = new URLSearchParams(window.location.search);
+  const riderId     = urlParams.get('rider_id') || urlParams.get('riderId') || '';
+  const orderCount  = urlParams.get('order_count') || urlParams.get('orderCount') || '';
+
+  // ── Landing source tracking ──
+  // Priority: explicit ?source= param → utm_source → document.referrer hostname → 'direct'
+  function detectSource() {
+    const s = urlParams.get('source') || urlParams.get('utm_source');
+    if (s) return s.toLowerCase();
+    const ref = document.referrer || '';
+    if (!ref) return 'direct';
+    try {
+      const host = new URL(ref).hostname.toLowerCase();
+      if (host.includes('whatsapp'))                                              return 'whatsapp';
+      if (host.includes('t.co') || host.includes('twitter') || host.includes('x.com')) return 'twitter';
+      if (host.includes('facebook') || host.includes('fb.com'))                   return 'facebook';
+      if (host.includes('instagram'))                                             return 'instagram';
+      if (host.includes('linkedin'))                                              return 'linkedin';
+      if (host.includes('telegram') || host.includes('t.me'))                     return 'telegram';
+      if (host.includes('google'))                                                return 'google';
+      if (host.includes('mail') || host.includes('gmail') || host.includes('outlook')) return 'email';
+      return host; // any other referring domain
+    } catch (_) { return 'unknown'; }
+  }
+  const source      = detectSource();
+  const referrer    = document.referrer || '';
+  const utmMedium   = urlParams.get('utm_medium')   || '';
+  const utmCampaign = urlParams.get('utm_campaign') || '';
+  // Full source URL captured server-side by /api/r and forwarded as ?src_url=
+  const sourceUrl   = urlParams.get('src_url') || '';
+
+  // ── Carousel state ──
+  let carouselIndex    = 0;
+  let carouselTimer    = null;
+  let carouselDotNodes = [];
+  let slideDuration    = 3000; // ms per full slide (in + hold + out)
+
+  // ── Language ──
+  function setLang(lang) {
+    if (lang !== currentLang) track('language_switch', { language: lang });
+    currentLang = lang;
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-hi').classList.toggle('active', lang === 'hi');
+    const c = CONTENT[lang];
+    document.getElementById('h-title').textContent    = c.title;
+    document.getElementById('h-sub').textContent      = c.sub;
+    document.getElementById('l-rating').textContent   = c.rating;
+    document.getElementById('l-feedback').textContent = c.feedback;
+    document.getElementById('submitText').textContent = c.submit;
+    document.getElementById('s-title').textContent    = c.successTitle;
+    document.getElementById('s-sub').textContent      = c.successSub;
+    if (currentRating > 0) {
+      const badge = document.getElementById('ratingBadge');
+      badge.textContent = c.starLabels[currentRating];
+      badge.classList.add('visible');
+    }
+    buildCarousel();
+  }
+
+  // ── Stars ──
+  function setRating(val) {
+    currentRating = val;
+    document.querySelectorAll('.star').forEach(s =>
+      s.classList.toggle('filled', parseInt(s.dataset.val) <= val)
+    );
+    const badge = document.getElementById('ratingBadge');
+    badge.textContent = CONTENT[currentLang].starLabels[val];
+    badge.classList.add('visible');
+    track('rating_selected', { rating: val, language: currentLang });
+  }
+  document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('mouseenter', () => {
+      const val = parseInt(star.dataset.val);
+      document.querySelectorAll('.star').forEach(s => {
+        s.style.color = parseInt(s.dataset.val) <= val ? 'var(--star-active)' : 'var(--star-inactive)';
+      });
+    });
+    star.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.star').forEach(s => {
+        s.style.color = '';
+        s.classList.toggle('filled', parseInt(s.dataset.val) <= currentRating);
+      });
+    });
+  });
+
+  // ── Carousel ──
+  function buildCarousel() {
+    stopCarousel();
+    const examples = CONTENT[currentLang].examples;
+    const track  = document.getElementById('carouselTrack');
+    const dotsEl = document.getElementById('carouselDots');
+
+    track.innerHTML  = '';
+    dotsEl.innerHTML = '';
+    carouselDotNodes = [];
+    carouselIndex    = 0;
+
+    document.documentElement.style.setProperty('--slide-dur', slideDuration + 'ms');
+
+    examples.forEach((ex, i) => {
+      const item = document.createElement('div');
+      item.className = 'carousel-item';
+      item.id = 'slide-' + i;
+
+      const badge = document.createElement('span');
+      badge.className = 'carousel-badge ' + ex.type;
+      badge.textContent = ex.type === 'pos' ? '👍' : '👎';
+
+      const txt = document.createElement('span');
+      txt.className = 'carousel-text';
+      txt.textContent = ex.text;
+
+      item.appendChild(badge);
+      item.appendChild(txt);
+      track.appendChild(item);
+
+      const dot = document.createElement('div');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dotsEl.appendChild(dot);
+      carouselDotNodes.push(dot);
+    });
+
+    startCarousel();
+  }
+
+  function playSlide(index) {
+    const examples = CONTENT[currentLang].examples;
+    const item = document.getElementById('slide-' + index);
+    if (!item) return;
+
+    // Remove animation class, force reflow, re-add to restart
+    item.classList.remove('playing');
+    void item.offsetWidth;
+    item.classList.add('playing');
+
+    // Update dots
+    carouselDotNodes.forEach((d, i) => d.classList.toggle('active', i === index));
+  }
+
+  function startCarousel() {
+    stopCarousel();
+    // Play first slide immediately
+    playSlide(0);
+    carouselIndex = 0;
+
+    // Advance every slideDuration ms
+    carouselTimer = setInterval(() => {
+      const total = CONTENT[currentLang].examples.length;
+      carouselIndex = (carouselIndex + 1) % total;
+      playSlide(carouselIndex);
+    }, slideDuration);
+  }
+
+  function stopCarousel() {
+    if (carouselTimer) { clearInterval(carouselTimer); carouselTimer = null; }
+    // Remove playing class from all slides so they go invisible instantly
+    document.querySelectorAll('.carousel-item').forEach(el => el.classList.remove('playing'));
+  }
+
+  // ── Textarea events ──
+  function onTextFocus() {
+    document.getElementById('textareaWrapper').classList.add('focused');
+  }
+
+  function onTextBlur() {
+    document.getElementById('textareaWrapper').classList.remove('focused');
+  }
+
+  function onTextInput() {
+    const val = document.getElementById('feedbackText').value;
+    document.getElementById('charCount').textContent = val.length;
+    if (val.trim()) document.getElementById('textareaWrapper').classList.remove('error');
+  }
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+  }
+
+  // ── Submit ──
+  async function submitForm() {
+    const c = CONTENT[currentLang];
+    if (currentRating === 0) { showToast(c.toastRating, 'error'); return; }
+    if (!document.getElementById('feedbackText').value.trim()) {
+      showToast(c.toastFeedback, 'error');
+      document.getElementById('textareaWrapper').classList.add('error');
+      document.getElementById('feedbackText').focus();
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    btn.disabled = true;
+    submitText.innerHTML = '<span class="spinner"></span>' + c.submitting;
+
+    const payload = {
+      source: 'rider_feedback',                  // form identifier (kept for Apps Script routing)
+      landingSource: source,                     // where the user came from
+      referrer: referrer,                        // raw document.referrer (browser-side)
+      sourceUrl: sourceUrl,                      // full source URL captured by /api/r (server-side)
+      utmMedium: utmMedium,
+      utmCampaign: utmCampaign,
+      riderId: riderId, orderCount: orderCount, rating: currentRating,
+      feedback: document.getElementById('feedbackText').value.trim(),
+      language: currentLang, timestamp: new Date().toISOString()
+    };
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      track('feedback_submitted', {
+        rating: currentRating,
+        language: currentLang,
+        has_text: payload.feedback.length > 0,
+        char_count: payload.feedback.length,
+        landing_source: source,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign
+      });
+      showSuccess();
+    } catch (err) {
+      showToast(c.toastError, 'error');
+      btn.disabled = false;
+      submitText.textContent = c.submit;
+    }
+  }
+
+  function showSuccess() {
+    stopCarousel();
+    stopSpeech();
+    document.getElementById('formContent').classList.add('hidden');
+    document.getElementById('successScreen').classList.add('visible');
+  }
+
+  // ── Speech-to-text ──
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let isListening = false;
+  let wantListening = false; // user intent — survives auto-restart between utterances
+
+  const SPEECH_LANG = { en: 'en-IN', hi: 'hi-IN' };
+
+  if (!SpeechRecognition) {
+    document.getElementById('micBtn').classList.add('unsupported');
+  } else {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;   // one utterance per session — avoids Android accumulation bug
+    recognition.interimResults = true;
+
+    let sessionBase = ''; // textarea content at the start of this utterance
+
+    recognition.onstart = () => {
+      isListening = true;
+      sessionBase = document.getElementById('feedbackText').value.trimEnd();
+      document.getElementById('micBtn').classList.add('listening');
+      document.getElementById('micLabel').textContent = 'Stop transcription';
+      document.getElementById('micIcon').innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
+    };
+
+    recognition.onresult = (e) => {
+      // With continuous=false there is exactly one result; transcript updates
+      // in place as speech progresses — no accumulation across results.
+      const transcript = e.results[0][0].transcript;
+      const sep = sessionBase ? ' ' : '';
+      const ta = document.getElementById('feedbackText');
+      ta.value = (sessionBase + sep + transcript).trimStart();
+      document.getElementById('charCount').textContent = ta.value.length;
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      const ta = document.getElementById('feedbackText');
+      ta.value = ta.value.trimEnd();
+      document.getElementById('charCount').textContent = ta.value.length;
+
+      if (wantListening) {
+        // Auto-restart for the next utterance — keeps mic active until user taps to stop
+        try { recognition.start(); } catch (_) {}
+        return;
+      }
+
+      document.getElementById('micBtn').classList.remove('listening');
+      document.getElementById('micLabel').textContent = 'Speak here';
+      document.getElementById('micIcon').innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
+      track('voice_stopped', { language: currentLang, chars_captured: ta.value.length });
+    };
+
+    recognition.onerror = (e) => {
+      if (e.error === 'no-speech') return; // silence between utterances — ignore
+      wantListening = false;
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+      document.getElementById('micLabel').textContent = 'Speak here';
+      document.getElementById('micIcon').innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
+      showToast('🎤 Mic error: ' + e.error, 'error');
+    };
+  }
+
+  function toggleSpeech() {
+    if (!recognition) return;
+    if (wantListening) {
+      wantListening = false;
+      try { recognition.stop(); } catch (_) {}
+      return;
+    }
+    wantListening = true;
+    recognition.lang = SPEECH_LANG[currentLang] || 'en-IN';
+    track('voice_started', { language: currentLang });
+    try { recognition.start(); } catch (_) {}
+  }
+
+  function stopSpeech() {
+    wantListening = false;
+    try { if (recognition) recognition.stop(); } catch (_) {}
+  }
+
+  // Stop mic if language is switched mid-recording
+  const _origSetLang = setLang;
+  setLang = function(lang) { stopSpeech(); _origSetLang(lang); };
+
+  setLang('en');
+</script>
+</body>
+</html>
