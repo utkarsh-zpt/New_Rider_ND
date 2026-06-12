@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/rider-feedback", "destination": "/index.html" }
+    { "source": "/rider-banner", "destination": "/index.html" }
   ]
 }
