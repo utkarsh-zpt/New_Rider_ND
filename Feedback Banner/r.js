@@ -78,7 +78,7 @@ export default function handler(req, res) {
   );
 
   // 4. Build the redirect target — the existing form page
-  const target = new URL('https://' + (req.headers.host || 'localhost') + '/rider-feedback');
+  const target = new URL('https://' + (req.headers.host || 'localhost') + '/rider-banner');
   if (rider_id) target.searchParams.set('rider_id', rider_id);
   if (order_count) target.searchParams.set('order_count', order_count);
   if (utm_source) target.searchParams.set('utm_source', utm_source);
